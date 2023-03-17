@@ -11,20 +11,21 @@ class HumanDetection:
 
     def process_frame(self):
         # Preprocess the frame
-        resized = cv2.resize(frame, (86, 48))
+        resized = cv2.resize(self.frame, (86, 48))
         image_rgb = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
 
         # Use the model to predict whether there is fire in the frame
-        prediction = model.predict(np.expand_dims(image_rgb, axis=0))
+        prediction = self.model.predict(np.expand_dims(image_rgb, axis=0))
 
         print(
             f"Prediction is: {prediction} and the label is: {[np.argmax(prediction)]}"
         )
         label = self.humanlist[np.argmax(prediction)]
 
-        cv2.putText(frame, label, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        cv2.putText(self.frame, label, (50, 50),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
-        return frame, label
+        return self.frame, label
 
 
 if __name__ == "__main__":
@@ -45,8 +46,8 @@ if __name__ == "__main__":
         # Display the frame
         cv2.imshow("Human Detection", processed_frame)
 
-        if processed_label == "HUMAN":
-            print("Human Detected")
+        # if processed_label == "HUMAN":
+        #     return "human detection"
 
         # Press q to quit
         if cv2.waitKey(1) & 0xFF == ord("q"):
