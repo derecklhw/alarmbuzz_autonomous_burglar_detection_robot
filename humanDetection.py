@@ -35,7 +35,9 @@ if __name__ == "__main__":
     model = load_model(r"Models/human.h5")
 
     while True:
-        ret, frame = cap.read()
+        ret, src = cap.read()
+        # Use flip code 0 to flip vertically
+        frame = cv2.flip(src, 0)
 
         # Initialize the class
         human = HumanDetection(frame, model)
