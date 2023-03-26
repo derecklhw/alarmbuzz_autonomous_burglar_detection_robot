@@ -39,3 +39,4 @@ def triggerHumanDetection():
 
 if __name__ == "__main__":
     humanDetection = triggerHumanDetection()
+    print(humanDetection)
