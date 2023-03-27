@@ -30,6 +30,7 @@ while cap.isOpened():
             cv2.rectangle(image, (x, y),
                           (x + w, y + h), 
                           (0, 0, 255), 2)
+            print("Human detected")
    
         # Showing the output Image
         cv2.imshow("Image", image)
@@ -37,6 +38,5 @@ while cap.isOpened():
             break
     else:
         break
-  
 cap.release()
 cv2.destroyAllWindows()
