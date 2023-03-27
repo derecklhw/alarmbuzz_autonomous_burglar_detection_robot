@@ -30,9 +30,10 @@ class HumanDetection:
 
 if __name__ == "__main__":
     # Start capturing the camera feed
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(0,cv2.CAP_V4L2)
+    
     # Load the trained model
-    model = load_model(r"Models/human.h5")
+    model = load_model(r"../Models/human.h5")
 
     while True:
         ret, src = cap.read()
