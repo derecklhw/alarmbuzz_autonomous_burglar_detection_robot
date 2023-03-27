@@ -3,7 +3,10 @@ import time
 
 if __name__ == "__main__":
     ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
+    ser.flush()
     time.sleep(2)
 
-    while True:
-        ser.write(b'run\n')
+    ser.write(b'start\n')
+    time.sleep(10)    
+    ser.write(b'stop\n')
+    ser.close()

@@ -1,24 +1,161 @@
-const int buzzer = 9; // buzzer to arduino pin 9
+// Motor A connections
+const int enA = 9;
+const int in1 = 5;
+const int in2 = 6;
+
+// Motor B connections
+const int enB = 10;
+const int in3 = 7;
+const int in4 = 8;
+
+// Set the speed (0 = off and 255 = max speed)
+// If your wheels are not moving, check your connections,
+// or increase the speed.
+const int motorSpeed = 140;
+
+#define Trigger A1
+#define Echo A2
 
 void setup() 
 {
     Serial.begin(9600);
-    // wait for serial port to connect
-    Serial.println("start");
-    pinMode(buzzer, OUTPUT); // Set buzzer - pin 9 as an output
-    while (!Serial){
-    ; //wait for serial port to connect
+
+    // Motor control pins are outputs
+    pinMode(enA, OUTPUT);
+    pinMode(enB, OUTPUT);
+    pinMode(in1, OUTPUT);
+    pinMode(in2, OUTPUT);
+    pinMode(in3, OUTPUT);
+    pinMode(in4, OUTPUT);
+
+    // Turn off motors - Initial state
+    digitalWrite(in1, LOW);
+    digitalWrite(in2, LOW);
+    digitalWrite(in3, LOW);
+    digitalWrite(in4, LOW);
+
+    // Set the motor speed
+    analogWrite(enA, motorSpeed);
+    analogWrite(enB, motorSpeed);
+
+    // Define each pin as an input or output.
+    pinMode(Echo, INPUT);
+    pinMode(Trigger, OUTPUT);
+
+    // Wait for serial port to connect
+    while (!Serial) {
+        ;
     }
 }
 
 void loop() {
-  if (Serial.available() > 0) {
-    String inputString = Serial.readStringUntil('\n');
-    if (inputString == "run") {
-        tone(buzzer, 1000); // Send 1KHz sound signal...
-        delay(1000);        // ...for 1 sec
-        noTone(buzzer);     // Stop sound...
-        delay(1000);        // ...for 1sec
+    if (Serial.available() > 0 ) {
+        // Read incoming data
+        String input = Serial.readStringUntil('\n');
+
+       // Perform action based on the input
+    if (input == "start") {
+            randomSeed(analogRead(3));
+            delay(200); // Pause 200 milliseconds
+            go_forward(); // Go forward
+        } else if (input == "stop") {
+            // Stop execution of code
+            delay(200); // Pause 200 milliseconds
+            stop_all(); // Stop all
+        }
     }
-  }
+}
+
+/*
+ * Returns the distance to the obstacle as an integer
+ */
+int doPing()
+{
+    int distance = 0;
+    int average = 0;
+
+    // Grab four measurements of distance and calculate
+    // the average.
+    for (int i = 0; i < 4; i++)
+    {
+
+        // Make the Trigger LOW (0 volts)
+        // for 2 microseconds
+        digitalWrite(Trigger, LOW);
+        delayMicroseconds(2);
+
+        // Emit high frequency 40kHz sound pulse
+        // (i.e. pull the Trigger)
+        // by making Trigger HIGH (5 volts)
+        // for 10 microseconds
+        digitalWrite(Trigger, HIGH);
+        delayMicroseconds(10);
+        digitalWrite(Trigger, LOW);
+
+        // Detect a pulse on the Echo pin 8.
+        // pulseIn() measures the time in
+        // microseconds until the sound pulse
+        // returns back to the sensor.
+        distance = pulseIn(Echo, HIGH);
+
+        // Speed of sound is:
+        // 13511.811023622 inches per second
+        // 13511.811023622/10^6 inches per microsecond
+        // 0.013511811 inches per microsecond
+        // Taking the reciprocal, we have:
+        // 74.00932414 microseconds per inch
+        // Below, we convert microseconds to inches by
+        // dividing by 74 and then dividing by 2
+        // to account for the roundtrip time.
+        distance = distance / 74 / 2;
+
+        // Compute running sum
+        average += distance;
+
+        // Wait 10 milliseconds between pings
+        delay(10);
+    }
+
+    // Return the average of the four distance
+    // measurements
+    return (average / 4);
+}
+
+/*
+ *  Forwards, backwards, right, left, stop.
+ */
+void go_forward()
+{
+    digitalWrite(in1, HIGH);
+    digitalWrite(in2, LOW);
+    digitalWrite(in3, HIGH);
+    digitalWrite(in4, LOW);
+}
+void go_backwards()
+{
+    digitalWrite(in1, LOW);
+    digitalWrite(in2, HIGH);
+    digitalWrite(in3, LOW);
+    digitalWrite(in4, HIGH);
+}
+void go_right()
+{
+    digitalWrite(in1, HIGH);
+    digitalWrite(in2, LOW);
+    digitalWrite(in3, LOW);
+    digitalWrite(in4, HIGH);
+}
+void go_left()
+{
+    digitalWrite(in1, LOW);
+    digitalWrite(in2, HIGH);
+    digitalWrite(in3, HIGH);
+    digitalWrite(in4, LOW);
+}
+void stop_all()
+{
+    digitalWrite(in1, LOW);
+    digitalWrite(in2, LOW);
+    digitalWrite(in3, LOW);
+    digitalWrite(in4, LOW);
 }
