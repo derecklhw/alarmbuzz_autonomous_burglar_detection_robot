@@ -6,11 +6,12 @@ import imutils
 hog = cv2.HOGDescriptor()
 hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
    
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(0, cv2.CAP_V4L2)
    
 while cap.isOpened():
     # Reading the video stream
-    ret, image = cap.read()
+    ret, src = cap.read()
+    image = cv2.flip(src, 0)
     if ret:
         image = imutils.resize(image, 
                                width=min(400, image.shape[1]))
