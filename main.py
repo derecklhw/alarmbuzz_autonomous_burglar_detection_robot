@@ -1,3 +1,4 @@
+import serial
 import cv2
 from keras.models import load_model
 import time
@@ -18,7 +19,9 @@ def triggerHumanDetection():
 
     while (time.time() - start_time) < duration:
         # Code to be executed during the 10 second limit
-        ret, frame = cap.read()
+        ret, src = cap.read()
+        # Use flip code 0 to flip vertically
+        frame = cv2.flip(src, 0)
 
         # Initialize the class
         human = HumanDetection(frame, model)
@@ -38,5 +41,10 @@ def triggerHumanDetection():
     return "no human detected"
 
 if __name__ == "__main__":
-    humanDetection = triggerHumanDetection()
-    print(humanDetection)
+    ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
+    ser.flush()
+
+    time.sleep(2)
+    while True:
+        ser.write(b'run\n')
+        print("running")
