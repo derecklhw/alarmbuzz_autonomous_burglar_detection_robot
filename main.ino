@@ -16,6 +16,8 @@ const int motorSpeed = 140;
 #define Trigger A1
 #define Echo A2
 
+boolean start_flag = false;
+
 void setup() 
 {
     Serial.begin(9600);
@@ -55,14 +57,43 @@ void loop() {
 
        // Perform action based on the input
     if (input == "start") {
+            start_flag = true;
             randomSeed(analogRead(3));
             delay(200); // Pause 200 milliseconds
             go_forward(); // Go forward
         } else if (input == "stop") {
             // Stop execution of code
+            start_flag = false;
             delay(200); // Pause 200 milliseconds
             stop_all(); // Stop all
         }
+    }
+
+    // Obstacle detection code
+    if (start_flag) {
+        int distance = doPing();
+
+        // If obstacle <= 16 inches away
+        if (distance >= 0 && distance <= 16)
+        {
+
+            // Serial.println("Obstacle detected ahead");
+            go_backwards(); // Move in reverse
+            delay(2000);
+
+            /* Go left or right to avoid the obstacle*/
+            if (random(2) == 0)
+            {               // Generates 0 or 1, randomly
+                go_right(); // Turn right
+            }
+            else
+            {
+                go_left(); // Turn left
+            }
+            delay(3000);
+            go_forward(); // Move forward
+        }
+        delay(50); // Wait 50 milliseconds before pinging again
     }
 }
 

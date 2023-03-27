@@ -7,6 +7,6 @@ if __name__ == "__main__":
     time.sleep(2)
 
     ser.write(b'start\n')
-    time.sleep(10)    
+    time.sleep(30)    
     ser.write(b'stop\n')
     ser.close()
