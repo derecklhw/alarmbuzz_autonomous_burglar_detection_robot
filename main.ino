@@ -13,8 +13,15 @@ const int in4 = 8;
 // or increase the speed.
 const int motorSpeed = 140;
 
+// Ultrasonic connections
 #define Trigger A1
 #define Echo A2
+
+// PIR sensor connection
+int ledPin = 13;    // choose the pin for the LED
+int inputPin = 4;   // choose the input pin (for PIR sensor)
+int pirState = LOW; // we start, assuming no motion detected
+int val = 0;        // variable for reading the pin status
 
 boolean start_flag = false;
 
@@ -40,9 +47,13 @@ void setup()
     analogWrite(enA, motorSpeed);
     analogWrite(enB, motorSpeed);
 
-    // Define each pin as an input or output.
+    // Define each pin as an input or output for ultrasonic.
     pinMode(Echo, INPUT);
     pinMode(Trigger, OUTPUT);
+
+    // Define each pin as an input or output for pir sensor
+    pinMode(ledPin, OUTPUT);  // declare LED as output
+    pinMode(inputPin, INPUT); // declare sensor as input
 
     // Wait for serial port to connect
     while (!Serial) {
@@ -55,8 +66,8 @@ void loop() {
         // Read incoming data
         String input = Serial.readStringUntil('\n');
 
-       // Perform action based on the input
-    if (input == "start") {
+        // Perform action based on the input
+        if (input == "start") {
             start_flag = true;
             randomSeed(analogRead(3));
             delay(200); // Pause 200 milliseconds
@@ -69,31 +80,34 @@ void loop() {
         }
     }
 
-    // Obstacle detection code
     if (start_flag) {
-        int distance = doPing();
-
-        // If obstacle <= 16 inches away
-        if (distance >= 0 && distance <= 16)
-        {
-
-            // Serial.println("Obstacle detected ahead");
-            go_backwards(); // Move in reverse
-            delay(2000);
-
-            /* Go left or right to avoid the obstacle*/
-            if (random(2) == 0)
-            {               // Generates 0 or 1, randomly
-                go_right(); // Turn right
-            }
-            else
+        val = digitalRead(inputPin); // read input value
+        if (val == HIGH)
+        {                             // check if the input is HIGH
+            digitalWrite(ledPin, HIGH); // turn LED ON
+            if (pirState == LOW)
             {
-                go_left(); // Turn left
+            // we have just turned on
+            Serial.println("Motion detected!");
+            // We only want to print on the output change, not state
+            pirState = HIGH;
+            stop_all();
+            delay(5000);
             }
-            delay(3000);
-            go_forward(); // Move forward
         }
-        delay(50); // Wait 50 milliseconds before pinging again
+        else
+        {
+            digitalWrite(ledPin, LOW); // turn LED OFF
+            if (pirState == HIGH)
+            {
+            // we have just turned of
+            Serial.println("Motion ended!");
+            // We only want to print on the output change, not state
+            pirState = LOW;
+            go_forward();
+            }
+        }       
+        avoid_obstacle();
     }
 }
 
@@ -189,4 +203,35 @@ void stop_all()
     digitalWrite(in2, LOW);
     digitalWrite(in3, LOW);
     digitalWrite(in4, LOW);
+}
+
+/*
+ * Obstacle detected, avoid it
+*/
+void avoid_obstacle()
+{
+    int distance = doPing();
+
+    // If obstacle <= 16 inches away
+    if (distance >= 0 && distance <= 16)
+    {
+        Serial.println("Obstacle detected ahead");
+        go_backwards(); // Move in reverse
+        delay(2000);
+
+        /* Go left or right to avoid the obstacle*/
+        if (random(2) == 0)
+        {               // Generates 0 or 1, randomly
+            go_right(); // Turn right
+        }
+        else
+        {
+            go_left(); // Turn left
+        }
+        delay(3000);
+        go_forward(); // Move forward
+        Serial.println("Obstacle detected completed");  
+    }
+    delay(50); // Wait 50 milliseconds before pinging again
+
 }
