@@ -7,6 +7,16 @@ if __name__ == "__main__":
     time.sleep(2)
 
     ser.write(b'start\n')
-    time.sleep(30)    
+
+    # Define the duration of the loop in seconds
+    duration = 60
+
+    # Get the current time
+    start_time = time.time()
+
+    # Loop the script for the specified duration
+    while (time.time() - start_time) < duration:
+        print("running")
+    
     ser.write(b'stop\n')
     ser.close()
