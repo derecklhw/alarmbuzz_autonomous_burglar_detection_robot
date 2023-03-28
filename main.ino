@@ -1,3 +1,11 @@
+#include <Servo.h>
+
+Servo servoX; // horizontal servo
+Servo servoY; // vertical servo
+
+int posX = 90; // initial position of the horizontal servo
+int posY = 0;  // initial position of the vertical servo
+
 // Motor A connections
 const int enA = 9;
 const int in1 = 5;
@@ -11,7 +19,7 @@ const int in4 = 8;
 // Set the speed (0 = off and 255 = max speed)
 // If your wheels are not moving, check your connections,
 // or increase the speed.
-const int motorSpeed = 140;
+const int motorSpeed = 255;
 
 // Ultrasonic connections
 #define Trigger A1
@@ -55,6 +63,9 @@ void setup()
     pinMode(ledPin, OUTPUT);  // declare LED as output
     pinMode(inputPin, INPUT); // declare sensor as input
 
+    servoX.attach(3);   // attach the horizontal servo to pin 3
+    servoY.attach(2);  // attach the vertical servo to pin 2
+
     // Wait for serial port to connect
     while (!Serial) {
         ;
@@ -92,7 +103,11 @@ void loop() {
             // We only want to print on the output change, not state
             pirState = HIGH;
             stop_all();
-            delay(5000);
+            delay(200);
+
+            servo_start();
+            servo_sweep();
+            servo_end();
             }
         }
         else
@@ -233,5 +248,54 @@ void avoid_obstacle()
         Serial.println("Obstacle detected completed");  
     }
     delay(50); // Wait 50 milliseconds before pinging again
+}
 
+void servo_start()
+{
+    for (posY = posY; posY <= 45; posY += 1)
+    {
+        servoY.write(posY); // move the vertical servo
+        delay(50);          // delay between movements
+    }
+
+    for (posX = posX; posX >= 0; posX -= 1)
+    {
+        servoX.write(posX); // move the horizontal servo
+        delay(50);          // delay between movements
+    }
+}
+
+void servo_sweep()
+{
+    unsigned long start_time = millis(); // get the current time
+    while (millis() - start_time < 10000)
+    { // run the loop for 10 seconds
+
+        for (posX = posX; posX <= 180; posX += 1)
+        {
+            servoX.write(posX); // move the horizontal servo
+            delay(50);          // delay between movements
+        }
+        for (posX = posX; posX >= 0; posX -= 1)
+        {
+            servoX.write(posX); // move the horizontal servo
+            delay(50);          // delay between movements
+        }
+    }
+}
+
+void servo_end()
+{
+    // stop the servos and wait for 1 second before starting the next loop
+    for (posX = posX; posX <= 90; posX += 1)
+    {
+        servoX.write(posX); // move the horizontal servo
+        delay(50);          // delay between movements
+    }
+
+    for (posY = posY; posY >= 0; posY -= 1)
+    {
+        servoY.write(posY); // move the vertical servo
+        delay(50);          // delay between movements
+    }
 }
