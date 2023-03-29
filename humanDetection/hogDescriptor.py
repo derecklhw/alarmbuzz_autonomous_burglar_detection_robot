@@ -41,9 +41,9 @@ class HumanDetector:
 
                 # If humans are detected, take a photo and send a notification to Discord
                 for (x, y, w, h) in regions:
-                    cv2.rectangle(image, (x, y),
-                                  (x + w, y + h), 
-                                  (0, 0, 255), 2)
+                    # cv2.rectangle(image, (x, y),
+                    #               (x + w, y + h), 
+                    #               (0, 0, 255), 2)
 
                     # Take a photo of the frame when humans are detected
                     current_time = datetime.now()

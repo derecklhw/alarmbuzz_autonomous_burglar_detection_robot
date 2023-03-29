@@ -260,7 +260,7 @@ void avoidObstacle()
     int distance = doPing();
 
     // If obstacle <= 16 inches away
-    if (distance >= 0 && distance <= 16)
+    if (distance >= 0 && distance <= 10)
     {
         // Serial.println("Obstacle detected ahead");
         goBackwards(); // Move in reverse
@@ -275,7 +275,7 @@ void avoidObstacle()
         {
             goLeft(); // Turn left
         }
-        delay(1000);
+        delay(1500);
         goForward(); // Move forward
         // Serial.println("Obstacle detected completed");  
     }
@@ -287,7 +287,7 @@ void avoidObstacle()
 */
 void sweepStart()
 {
-    for (posY = posY; posY <= 60; posY += 1)
+    for (posY = posY; posY <= 45; posY += 1)
     {
         servoY.write(posY); // move the vertical servo
         delay(50);          // delay between movements
