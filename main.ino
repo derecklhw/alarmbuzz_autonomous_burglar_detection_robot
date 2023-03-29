@@ -260,7 +260,7 @@ void avoidObstacle()
     int distance = doPing();
 
     // If obstacle <= 16 inches away
-    if (distance >= 0 && distance <= 10)
+    if (distance >= 0 && distance <= 12)
     {
         // Serial.println("Obstacle detected ahead");
         goBackwards(); // Move in reverse
