@@ -1,6 +1,7 @@
 import cv2
 import imutils
 import time
+from datetime import datetime
 
 class HumanDetector:
     def __init__(self, camera_id):
@@ -25,6 +26,10 @@ class HumanDetector:
                     cv2.rectangle(image, (x, y),
                                   (x + w, y + h), 
                                   (0, 0, 255), 2)
+                    # Take a photo when humans are detected
+                    current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    cv2.imwrite(f"images/photo_{current_time}.jpg", image)
+
                     self.cap.release()
                     cv2.destroyAllWindows()
                     return True
