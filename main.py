@@ -7,14 +7,38 @@ import cv2
 from humanDetection import hogDescriptor
 
 if __name__ == "__main__":
+    print("╔══════════════════════════════════════╗")
+    print("║         Welcome to AlarmBuzz!        ║")
+    print("╚══════════════════════════════════════╝")
+
+    # Wait for 1 second before continuing
+    time.sleep(1)
+
+    # Get the user's name
+    name = input("What's your name? ")
+
+    # Greet the user
+    print(f"\nHi {name}! Let's set up AlarmBuzz duration.\n")
+
+    # Wait for 1 second before continuing
+    time.sleep(1)
+
+    # Define the duration of the loop in seconds
+    while True:
+        try:
+            duration = int(input("How long do you want the alarm buzz to run for? (in seconds) "))
+            break
+        except ValueError:
+            print("Sorry, AlarmBuzz only accept integer :(\n")
+            
+    # Confirm the alarm time and duration
+    print(f"\nAlarmBuzz will run for {duration} seconds. Stay safe!\n")
+
     ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
     ser.flush()
     time.sleep(2)
 
     ser.write(b'start\n')
-
-    # Define the duration of the loop in seconds
-    duration = 60
 
     # Get the current time
     start_time = time.time()
@@ -31,10 +55,11 @@ if __name__ == "__main__":
                     detector = hogDescriptor.HumanDetector(0)
                     if (detector.detect_humans()):
                         ser.write(b'human')
-                        print("human")
+                        print("Human detected")
 
     except KeyboardInterrupt:
-        print("Keyboard interrupt detected. Stopping script...")
+        print("AlarmBuzz has been stopped.")
 
+    print("Thanks for using AlarmBuzz! Sweet dreams and have a great day ahead!")
     ser.write(b'stop\n')
     ser.close()
