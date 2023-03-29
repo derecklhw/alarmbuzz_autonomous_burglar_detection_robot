@@ -34,6 +34,8 @@ int inputPin = 4;   // choose the input pin (for PIR sensor)
 int pirState = LOW; // we start, assuming no motion detected
 int val = 0;        // variable for reading the pin status
 
+const int buzzer = 11; // buzzer to arduino pin 11
+
 boolean start_flag = false;
 
 void setup() 
@@ -49,6 +51,8 @@ void setup()
 
     servoY.write(posY); 
     servoX.write(posX);
+
+    pinMode(buzzer, OUTPUT);
 
     // Wait for serial port to connect
     while (!Serial) {
@@ -311,8 +315,9 @@ void sweepRunning()
             delay(50);          // delay between movements
 
             if (Serial.available() > 0 && Serial.readString() == "human")
-            {
+            {   
                 sweepEnd();
+                buzzerTone();
                 return;
             }
         }
@@ -324,6 +329,7 @@ void sweepRunning()
             if (Serial.available() > 0 && Serial.readString() == "human")
             {
                 sweepEnd();
+                buzzerTone();
                 return;
             }
         }
@@ -348,4 +354,15 @@ void sweepEnd()
         servoY.write(posY); // move the vertical servo
         delay(50);          // delay between movements
     }
+}
+
+/*
+* Buzzer emit sounds 
+*/
+void buzzerTone()
+{
+    tone(buzzer, 1000); // Send 1KHz sound signal...
+    delay(1000);        // ...for 1 sec
+    noTone(buzzer);     // Stop sound...
+    delay(1000);        // ...for 1sec
 }
