@@ -3,6 +3,9 @@
 Servo servoX; // horizontal servo
 Servo servoY; // vertical servo
 
+const int servoXPin = 3; // attach the horizontal servo to pin 3
+const int servoYPin = 2; // attach the vertical servo to pin 2
+
 int posX = 90; // initial position of the horizontal servo
 int posY = 0;  // initial position of the vertical servo
 
@@ -37,34 +40,15 @@ void setup()
 {
     Serial.begin(9600);
 
-    // Motor control pins are outputs
-    pinMode(enA, OUTPUT);
-    pinMode(enB, OUTPUT);
-    pinMode(in1, OUTPUT);
-    pinMode(in2, OUTPUT);
-    pinMode(in3, OUTPUT);
-    pinMode(in4, OUTPUT);
+    setupMotorPins();
+    setupUltrasonicPins();
+    setupPirSensorPins();
 
-    // Turn off motors - Initial state
-    digitalWrite(in1, LOW);
-    digitalWrite(in2, LOW);
-    digitalWrite(in3, LOW);
-    digitalWrite(in4, LOW);
+    servoX.attach(servoXPin);   
+    servoY.attach(servoYPin);
 
-    // Set the motor speed
-    analogWrite(enA, motorSpeed);
-    analogWrite(enB, motorSpeed);
-
-    // Define each pin as an input or output for ultrasonic.
-    pinMode(Echo, INPUT);
-    pinMode(Trigger, OUTPUT);
-
-    // Define each pin as an input or output for pir sensor
-    pinMode(ledPin, OUTPUT);  // declare LED as output
-    pinMode(inputPin, INPUT); // declare sensor as input
-
-    servoX.attach(3);   // attach the horizontal servo to pin 3
-    servoY.attach(2);  // attach the vertical servo to pin 2
+    servoY.write(posY); 
+    servoX.write(posX);
 
     // Wait for serial port to connect
     while (!Serial) {
@@ -82,12 +66,12 @@ void loop() {
             start_flag = true;
             randomSeed(analogRead(3));
             delay(200); // Pause 200 milliseconds
-            go_forward(); // Go forward
+            goForward(); // Go forward
         } else if (input == "stop") {
             // Stop execution of code
             start_flag = false;
             delay(200); // Pause 200 milliseconds
-            stop_all(); // Stop all
+            stopAll(); // Stop all
         }
     }
 
@@ -102,12 +86,12 @@ void loop() {
             Serial.println("Motion detected!");
             // We only want to print on the output change, not state
             pirState = HIGH;
-            stop_all();
+            stopAll();
             delay(200);
 
-            servo_start();
-            servo_sweep();
-            servo_end();
+            sweepStart();
+            sweepRunning();
+            sweepEnd();
             }
         }
         else
@@ -119,11 +103,55 @@ void loop() {
             Serial.println("Motion ended!");
             // We only want to print on the output change, not state
             pirState = LOW;
-            go_forward();
+            goForward();
             }
         }       
-        avoid_obstacle();
+        avoidObstacle();
     }
+}
+
+/*
+* Setup Motor Pins
+*/
+void setupMotorPins()
+{
+    // Motor control pins are outputs
+    pinMode(enA, OUTPUT);
+    pinMode(enB, OUTPUT);
+    pinMode(in1, OUTPUT);
+    pinMode(in2, OUTPUT);
+    pinMode(in3, OUTPUT);
+    pinMode(in4, OUTPUT);
+
+    // Turn off motors - Initial state
+    digitalWrite(in1, LOW);
+    digitalWrite(in2, LOW);
+    digitalWrite(in3, LOW);
+    digitalWrite(in4, LOW);
+
+    // Set the motor speed
+    analogWrite(enA, motorSpeed);
+    analogWrite(enB, motorSpeed);
+}
+
+/* 
+* Setup Ultrasonic Pins
+*/
+void setupUltrasonicPins()
+{
+    // Define each pin as an input or output for ultrasonic.
+    pinMode(Echo, INPUT);
+    pinMode(Trigger, OUTPUT);
+}
+
+/*
+* Setup Pir Sensor Pins 
+*/
+void setupPirSensorPins()
+{
+    // Define each pin as an input or output for pir sensor
+    pinMode(ledPin, OUTPUT);  // declare LED as output
+    pinMode(inputPin, INPUT); // declare sensor as input
 }
 
 /*
@@ -184,35 +212,35 @@ int doPing()
 /*
  *  Forwards, backwards, right, left, stop.
  */
-void go_forward()
+void goForward()
 {
     digitalWrite(in1, HIGH);
     digitalWrite(in2, LOW);
     digitalWrite(in3, HIGH);
     digitalWrite(in4, LOW);
 }
-void go_backwards()
+void goBackwards()
 {
     digitalWrite(in1, LOW);
     digitalWrite(in2, HIGH);
     digitalWrite(in3, LOW);
     digitalWrite(in4, HIGH);
 }
-void go_right()
+void goRight()
 {
     digitalWrite(in1, HIGH);
     digitalWrite(in2, LOW);
     digitalWrite(in3, LOW);
     digitalWrite(in4, HIGH);
 }
-void go_left()
+void goLeft()
 {
     digitalWrite(in1, LOW);
     digitalWrite(in2, HIGH);
     digitalWrite(in3, HIGH);
     digitalWrite(in4, LOW);
 }
-void stop_all()
+void stopAll()
 {
     digitalWrite(in1, LOW);
     digitalWrite(in2, LOW);
@@ -223,7 +251,7 @@ void stop_all()
 /*
  * Obstacle detected, avoid it
 */
-void avoid_obstacle()
+void avoidObstacle()
 {
     int distance = doPing();
 
@@ -231,26 +259,29 @@ void avoid_obstacle()
     if (distance >= 0 && distance <= 16)
     {
         Serial.println("Obstacle detected ahead");
-        go_backwards(); // Move in reverse
+        goBackwards(); // Move in reverse
         delay(2000);
 
         /* Go left or right to avoid the obstacle*/
         if (random(2) == 0)
         {               // Generates 0 or 1, randomly
-            go_right(); // Turn right
+            goRight(); // Turn right
         }
         else
         {
-            go_left(); // Turn left
+            goLeft(); // Turn left
         }
         delay(3000);
-        go_forward(); // Move forward
+        goForward(); // Move forward
         Serial.println("Obstacle detected completed");  
     }
     delay(50); // Wait 50 milliseconds before pinging again
 }
 
-void servo_start()
+/*
+ * Sweep Start movement
+*/
+void sweepStart()
 {
     for (posY = posY; posY <= 45; posY += 1)
     {
@@ -265,7 +296,10 @@ void servo_start()
     }
 }
 
-void servo_sweep()
+/*
+ * Sweep Running movement
+*/
+void sweepRunning()
 {
     unsigned long start_time = millis(); // get the current time
     while (millis() - start_time < 10000)
@@ -284,7 +318,10 @@ void servo_sweep()
     }
 }
 
-void servo_end()
+/*
+ * Sweep End Movement
+*/
+void sweepEnd()
 {
     // stop the servos and wait for 1 second before starting the next loop
     for (posX = posX; posX <= 90; posX += 1)
