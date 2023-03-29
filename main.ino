@@ -259,7 +259,7 @@ void avoidObstacle()
 {
     int distance = doPing();
 
-    // If obstacle <= 16 inches away
+    // If obstacle <= 10 inches away
     if (distance >= 0 && distance <= 12)
     {
         // Serial.println("Obstacle detected ahead");
