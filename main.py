@@ -14,9 +14,16 @@ if __name__ == "__main__":
     # Get the current time
     start_time = time.time()
 
-    # Loop the script for the specified duration
-    while (time.time() - start_time) < duration:
-        print("running")
-    
+    try:
+        # Loop the script for the specified duration
+        while (time.time() - start_time) < duration:
+            # Check if there is any data in the serial buffer
+            if ser.in_waiting > 0:
+                # Read a line from the serial port
+                line = ser.readline().decode().rstrip()
+                print("Received from serial:", line)
+    except KeyboardInterrupt:
+        print("Keyboard interrupt detected. Stopping script...")
+
     ser.write(b'stop\n')
     ser.close()
