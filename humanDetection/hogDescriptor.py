@@ -22,7 +22,7 @@ class PedestrianDetector:
                     cv2.rectangle(image, (x, y),
                                   (x + w, y + h), 
                                   (0, 0, 255), 2)
-                    return("Human detected")
+                    print("Human detected")
                 cv2.imshow("Image", image)
                 if cv2.waitKey(25) & 0xFF == ord('q'):
                     break
@@ -32,5 +32,4 @@ class PedestrianDetector:
         cv2.destroyAllWindows()
 
 detector = PedestrianDetector(0)  # camera_id = 0 for default camera
-print(detector.detect_pedestrians())
-
+detector.detect_pedestrians()
