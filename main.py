@@ -1,5 +1,10 @@
 import serial
 import time
+import sys
+import os
+import cv2
+
+from humanDetection import hogDescriptor
 
 if __name__ == "__main__":
     ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
@@ -22,6 +27,12 @@ if __name__ == "__main__":
                 # Read a line from the serial port
                 line = ser.readline().decode().rstrip()
                 print("Received from serial:", line)
+                if line == "motion":
+                    detector = hogDescriptor.HumanDetector(0)
+                    if (detector.detect_humans()):
+                        ser.write(b'human')
+                        print("human")
+
     except KeyboardInterrupt:
         print("Keyboard interrupt detected. Stopping script...")
 

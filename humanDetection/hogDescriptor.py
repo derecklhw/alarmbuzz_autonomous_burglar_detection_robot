@@ -1,14 +1,17 @@
 import cv2
 import imutils
+import time
 
-class PedestrianDetector:
+class HumanDetector:
     def __init__(self, camera_id):
         self.hog = cv2.HOGDescriptor()
         self.hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
         self.cap = cv2.VideoCapture(camera_id, cv2.CAP_V4L2)
+        self.duration = 20
         
-    def detect_pedestrians(self):
-        while self.cap.isOpened():
+    def detect_humans(self):
+        start_time = time.time()
+        while (time.time() - start_time) < self.duration:
             ret, src = self.cap.read()
             image = cv2.flip(src, 0)
             if ret:
@@ -22,7 +25,9 @@ class PedestrianDetector:
                     cv2.rectangle(image, (x, y),
                                   (x + w, y + h), 
                                   (0, 0, 255), 2)
-                    print("Human detected")
+                    self.cap.release()
+                    cv2.destroyAllWindows()
+                    return True
                 cv2.imshow("Image", image)
                 if cv2.waitKey(25) & 0xFF == ord('q'):
                     break
@@ -31,5 +36,6 @@ class PedestrianDetector:
         self.cap.release()
         cv2.destroyAllWindows()
 
-detector = PedestrianDetector(0)  # camera_id = 0 for default camera
-detector.detect_pedestrians()
+if __name__ == "__main__":
+    detector = HumanDetector(0)  # camera_id = 0 for default camera
+    detector.detect_humans()

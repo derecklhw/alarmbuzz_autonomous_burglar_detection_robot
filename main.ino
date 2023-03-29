@@ -83,13 +83,13 @@ void loop() {
             if (pirState == LOW)
             {
             // we have just turned on
-            Serial.println("Motion detected!");
             // We only want to print on the output change, not state
             pirState = HIGH;
             stopAll();
             delay(200);
 
             sweepStart();
+            Serial.println("motion");
             sweepRunning();
             sweepEnd();
             }
@@ -100,7 +100,7 @@ void loop() {
             if (pirState == HIGH)
             {
             // we have just turned of
-            Serial.println("Motion ended!");
+            // Serial.println("Motion ended!");
             // We only want to print on the output change, not state
             pirState = LOW;
             goForward();
@@ -258,7 +258,7 @@ void avoidObstacle()
     // If obstacle <= 16 inches away
     if (distance >= 0 && distance <= 16)
     {
-        Serial.println("Obstacle detected ahead");
+        // Serial.println("Obstacle detected ahead");
         goBackwards(); // Move in reverse
         delay(2000);
 
@@ -273,7 +273,7 @@ void avoidObstacle()
         }
         delay(3000);
         goForward(); // Move forward
-        Serial.println("Obstacle detected completed");  
+        // Serial.println("Obstacle detected completed");  
     }
     delay(50); // Wait 50 milliseconds before pinging again
 }
@@ -283,7 +283,7 @@ void avoidObstacle()
 */
 void sweepStart()
 {
-    for (posY = posY; posY <= 45; posY += 1)
+    for (posY = posY; posY <= 60; posY += 1)
     {
         servoY.write(posY); // move the vertical servo
         delay(50);          // delay between movements
@@ -296,9 +296,6 @@ void sweepStart()
     }
 }
 
-/*
- * Sweep Running movement
-*/
 void sweepRunning()
 {
     unsigned long start_time = millis(); // get the current time
@@ -309,14 +306,27 @@ void sweepRunning()
         {
             servoX.write(posX); // move the horizontal servo
             delay(50);          // delay between movements
+
+            if (Serial.available() > 0 && Serial.readString() == "human")
+            {
+                sweepEnd();
+                return;
+            }
         }
         for (posX = posX; posX >= 0; posX -= 1)
         {
             servoX.write(posX); // move the horizontal servo
             delay(50);          // delay between movements
+
+            if (Serial.available() > 0 && Serial.readString() == "human")
+            {
+                sweepEnd();
+                return;
+            }
         }
     }
 }
+
 
 /*
  * Sweep End Movement
