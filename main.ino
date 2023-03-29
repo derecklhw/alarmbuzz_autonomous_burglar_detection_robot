@@ -260,7 +260,7 @@ void avoidObstacle()
     {
         // Serial.println("Obstacle detected ahead");
         goBackwards(); // Move in reverse
-        delay(2000);
+        delay(1000);
 
         /* Go left or right to avoid the obstacle*/
         if (random(2) == 0)
@@ -271,7 +271,7 @@ void avoidObstacle()
         {
             goLeft(); // Turn left
         }
-        delay(3000);
+        delay(1000);
         goForward(); // Move forward
         // Serial.println("Obstacle detected completed");  
     }
