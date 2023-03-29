@@ -296,6 +296,9 @@ void sweepStart()
     }
 }
 
+/* 
+* Sweep Running movment 
+*/
 void sweepRunning()
 {
     unsigned long start_time = millis(); // get the current time

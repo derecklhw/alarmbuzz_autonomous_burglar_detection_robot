@@ -34,10 +34,10 @@ if __name__ == "__main__":
     # Confirm the alarm time and duration
     print(f"\nAlarmBuzz will run for {duration} seconds. Stay safe!\n")
 
+    # Open a serial connection and write the 'start' command to the microcontroller
     ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
     ser.flush()
     time.sleep(2)
-
     ser.write(b'start\n')
 
     # Get the current time
@@ -50,16 +50,18 @@ if __name__ == "__main__":
             if ser.in_waiting > 0:
                 # Read a line from the serial port
                 line = ser.readline().decode().rstrip()
-                print("Received from serial:", line)
                 if line == "motion":
+                    # Initialize a HumanDetector object and check if humans are detected
                     detector = hogDescriptor.HumanDetector(0)
                     if (detector.detect_humans()):
+                        # If humans are detected, write 'human' to the serial port and print a message
                         ser.write(b'human')
-                        print("Human detected")
 
     except KeyboardInterrupt:
         print("AlarmBuzz has been stopped.")
 
     print("Thanks for using AlarmBuzz! Sweet dreams and have a great day ahead!")
+    
+    # Close the serial connection and write the 'stop' command to the microcontroller
     ser.write(b'stop\n')
     ser.close()
