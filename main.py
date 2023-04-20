@@ -4,7 +4,7 @@ import sys
 import os
 import cv2
 
-from humanDetection import hogDescriptor
+from . import hogDescriptor
 
 if __name__ == "__main__":
     print("╔══════════════════════════════════════╗")
