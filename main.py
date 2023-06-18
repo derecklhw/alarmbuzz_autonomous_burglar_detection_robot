@@ -4,7 +4,7 @@ import sys
 import os
 import cv2
 
-from . import hogDescriptor
+import hogDescriptor
 
 if __name__ == "__main__":
     print("╔══════════════════════════════════════╗")
