@@ -27,7 +27,10 @@ if __name__ == "__main__":
     while True:
         try:
             duration = int(input("How long do you want the alarm buzz to run for? (in seconds) "))
-            break
+            if duration <= 0:
+                print("Sorry, AlarmBuzz only accept integer greater than 0\n")
+            else:
+                break
         except ValueError:
             print("Sorry, AlarmBuzz only accept integer :(\n")
             
