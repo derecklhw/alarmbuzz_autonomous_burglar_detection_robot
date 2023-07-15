@@ -2,6 +2,8 @@
 
 AlarmBuzz is an autonomous burglar detection robot that detects human presence using a camera and sends notifications to Discord when humans are detected. It combines Python and Arduino code to create a system that can be used for security or surveillance purposes.
 
+![AlarmBuzz Robot](images/alarmbuzz_robot.png)
+
 ## Requirements
 
 To run the AlarmBuzz program, you need to have the following dependencies installed:
