@@ -39,9 +39,9 @@ To run the AlarmBuzz program, you need to have the following dependencies instal
 
 4. Run the `main.py` script using Python:
 
-```shell
-python main.py
-```
+   ```shell
+   python main.py
+   ```
 
 5. The program will display a welcome message and prompt you to enter your name.
 
