@@ -21,13 +21,17 @@ To run the AlarmBuzz program, you need to have the following dependencies instal
 
 1. Clone the repository or download the source code files.
 
-2. Install the required Python packages by running the following command in your terminal or command prompt:
+   ```bash
+   git clone https://github.com/derecklhw/alarmbuzz_autonomous_burglar_detection_robot.git
+   ```
+
+3. Install the required Python packages by running the following command in your terminal or command prompt:
 
    ```shell
    pip install -r requirements.txt
    ```
 
-3. Upload the main.ino Arduino sketch to your Arduino board using the Arduino IDE.
+4. Upload the main.ino Arduino sketch to your Arduino board using the Arduino IDE.
 
 ## Usage
 
