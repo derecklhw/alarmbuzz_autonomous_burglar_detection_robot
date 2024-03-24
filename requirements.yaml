@@ -1,6 +1,5 @@
-tensorflow
-keras
 pyserial
 opencv-python
 imutils
 dhooks
+python-dotenv

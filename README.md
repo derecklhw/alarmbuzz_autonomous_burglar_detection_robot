@@ -6,16 +6,9 @@ AlarmBuzz is an autonomous burglar detection robot that detects human presence u
 
 ## Requirements
 
-To run the AlarmBuzz program, you need to have the following dependencies installed:
-
-- Python 3
-- TensorFlow
-- Keras
-- PySerial
-- OpenCV-Python
-- imutils
-- dhooks
-- Arduino IDE (for uploading the Arduino sketch)
+- Python >= 3.10
+- Arduino IDE >= 1.8.19 (for uploading the Arduino sketch) + Servo Library (for controlling the servo motors)
+- Pi Camera Module (or any other compatible camera)
 
 ## Installation
 
@@ -25,13 +18,22 @@ To run the AlarmBuzz program, you need to have the following dependencies instal
    git clone https://github.com/derecklhw/alarmbuzz_autonomous_burglar_detection_robot.git
    ```
 
-3. Install the required Python packages by running the following command in your terminal or command prompt:
+2. Install the required Python packages by running the following command in your terminal or command prompt:
 
    ```shell
    pip install -r requirements.txt
    ```
 
-4. Upload the main.ino Arduino sketch to your Arduino board using the Arduino IDE.
+3. Upload the `main.ino` Arduino sketch to your Arduino board using the Arduino IDE.
+
+4. Create `.env` file in the project root directory and add the following environment variables:
+
+```shell
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/1234567890/ABCDEFGHIJKLMN1234567890
+SAVE_IMAGE_PATH="images/"
+```
+
+Replace the `DISCORD_WEBHOOK_URL` with your own Discord webhook URL.
 
 ## Usage
 
