@@ -305,37 +305,40 @@ void sweepStart()
 */
 void sweepRunning()
 {
-    unsigned long start_time = millis(); // get the current time
-    while (millis() - start_time < 10000)
-    { // run the loop for 10 seconds
+    for (posX = posX; posX <= 180; posX += 1)
+    {
+        servoX.write(posX); // move the horizontal servo
+        delay(50);          // delay between movements
 
-        for (posX = posX; posX <= 180; posX += 1)
-        {
-            servoX.write(posX); // move the horizontal servo
-            delay(50);          // delay between movements
-
-            if (Serial.available() > 0 && Serial.readString() == "human")
-            {   
-                sweepEnd();
-                buzzerTone();
-                return;
-            }
+        if (checkSerialCommand()){
+            return;
         }
-        for (posX = posX; posX >= 0; posX -= 1)
-        {
-            servoX.write(posX); // move the horizontal servo
-            delay(50);          // delay between movements
+       
+    }
+    for (posX = posX; posX >= 0; posX -= 1)
+    {
+        servoX.write(posX); // move the horizontal servo
+        delay(50);          // delay between movements
 
-            if (Serial.available() > 0 && Serial.readString() == "human")
-            {
-                sweepEnd();
-                buzzerTone();
-                return;
-            }
+        if (checkSerialCommand()){
+            return;
         }
     }
 }
 
+/*
+* Check Serial Command
+*/
+boolean checkSerialCommand()
+{
+    if (Serial.available() > 0 && Serial.readString() == "human")
+    {   
+        sweepEnd();
+        buzzerTone();
+        return true;
+    }
+    return false;
+}
 
 /*
  * Sweep End Movement

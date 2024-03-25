@@ -45,15 +45,15 @@ class HumanDetector:
                                   (0, 0, 255), 2)
 
                     utils = Utils()
-                    utils.saveImage(image)
-                        
-                    # Release the video capture device and close the image window
-                    self.cap.release()
-                    cv2.destroyAllWindows()
-                    
+                    utils.saveImage(image)     
                     utils.sendDiscordNotification()
 
                     print("AlarmBuzz has detected a human presence! Please check your surroundings.\n")
+
+                    # Release the video capture device and close the image window
+                    self.cap.release()
+                    cv2.destroyAllWindows()
+
                     return True
 
                 # Display the image with bounding boxes around detected humans
@@ -68,6 +68,8 @@ class HumanDetector:
         # Release the video capture device and close the image window when done
         self.cap.release()
         cv2.destroyAllWindows()
+
+        return False
 
 if __name__ == "__main__":
     # Create a HumanDetector object with the default camera ID (0)

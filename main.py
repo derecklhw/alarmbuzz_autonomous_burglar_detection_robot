@@ -1,40 +1,39 @@
 import serial
 import time
-import sys
-import os
-import cv2
 
 import hogDescriptor
 
 class App:
-    name = ""
+    username = ""
     duration = 0
     start_time = 0
-    ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
     camera_id = 0
+    ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
+    detector = hogDescriptor.HumanDetector(camera_id)
 
     def __init__(self):
-        self.get_user_input()
+        self.getUserInput()
         self.startSerialConnection()
 
-    def get_user_input(self):
+    def getUserInput(self):
         print("╔══════════════════════════════════════╗")
         print("║         Welcome to AlarmBuzz!        ║")
         print("╚══════════════════════════════════════╝")
-        time.sleep(1)
 
         # Get the user's name
-        self.name = input("What's your name? ")
+        self.username = input("What's your name? ")
 
         # Greet the user
-        print(f"\nHi {self.name}! Let's set up AlarmBuzz duration.\n")
+        print(f"\nHi {self.username}! Let's set up AlarmBuzz duration.\n")
 
         # Define the duration of the loop in seconds
         while True:
             try:
                 self.duration = int(input("How long do you want the alarm buzz to run for? (in seconds) "))
                 if self.duration <= 0:
-                    print("Sorry, AlarmBuzz only accept integer greater than 0\n")
+                    print("Sorry, AlarmBuzz duration must be greater than 0.\n")
+                elif 0 < self.duration < 30:
+                    print("Sorry, AlarmBuzz requires at least 30 seconds to operate.\n")
                 else:
                     break
             except ValueError:
@@ -56,7 +55,7 @@ class App:
         # Close the serial connection and write the 'stop' command to the microcontroller
         self.ser.write(b'stop\n')
         self.ser.close()
-        print("Thanks for using AlarmBuzz! Sweet dreams and have a great day ahead!")
+        print(f"Thanks for using AlarmBuzz! Sweet dreams and have a great day ahead {self.username}!")
 
 
     def run(self):
@@ -69,8 +68,7 @@ class App:
                     line = self.ser.readline().decode().rstrip()
                     if line == "motion":
                         # Initialize a HumanDetector object and check if humans are detected
-                        detector = hogDescriptor.HumanDetector(self.camera_id)
-                        if (detector.detect_humans()):
+                        if (self.detector.detect_humans()):
                             # If humans are detected, write 'human' to the serial port and print a message
                             self.ser.write(b'human')
 

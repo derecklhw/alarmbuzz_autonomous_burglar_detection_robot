@@ -13,8 +13,10 @@ class Utils:
     hook = Webhook(os.getenv('DISCORD_WEBHOOK_URL'))
 
     def saveImage(self, image):
-        # Take a photo of the frame when humans are detected
+        # Format the current time as a string
         current_time_image_format = self.current_time.strftime("%Y%m%d_%H%M%S")
+
+        # Save the image to the specified path
         self.human_detection_image_path = f"{self.save_image_path}{current_time_image_format}.jpg"
         cv2.imwrite(self.human_detection_image_path, image)
 
@@ -24,7 +26,7 @@ class Utils:
 
         # Create a message with the current time and instructions for the user
         data = f"Attention! Our sensors have detected the presence of a human being as of {dt_string}.\nFor safety reasons, please stand still and wait for further instructions."
-        human_detection_image = File(self.human_detection_image_path)
         
         # Send the message and image to the Discord webhook
+        human_detection_image = File(self.human_detection_image_path)
         self.hook.send(data, file=human_detection_image)
