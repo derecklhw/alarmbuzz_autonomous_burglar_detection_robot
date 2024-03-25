@@ -20,8 +20,6 @@ const int in3 = 7;
 const int in4 = 8;
 
 // Set the speed (0 = off and 255 = max speed)
-// If your wheels are not moving, check your connections,
-// or increase the speed.
 const int motorSpeed = 255;
 
 // Ultrasonic connections
@@ -34,9 +32,12 @@ int inputPin = 4;   // choose the input pin (for PIR sensor)
 int pirState = LOW; // we start, assuming no motion detected
 int val = 0;        // variable for reading the pin status
 
-const int buzzer = 11; // buzzer to arduino pin 11
+// Buzzer connection
+const int buzzer = 11;
 
+// Function prototypes
 boolean start_flag = false;
+boolean stop_flag = false;
 
 void setup() 
 {
@@ -45,13 +46,7 @@ void setup()
     setupMotorPins();
     setupUltrasonicPins();
     setupPirSensorPins();
-
-    servoX.attach(servoXPin);   
-    servoY.attach(servoYPin);
-
-    servoY.write(posY); 
-    servoX.write(posX);
-
+    setupServoPins();
     pinMode(buzzer, OUTPUT);
 
     // Wait for serial port to connect
@@ -61,101 +56,118 @@ void setup()
 }
 
 void loop() {
-    if (Serial.available() > 0 ) {
-        // Read incoming data
-        String input = Serial.readStringUntil('\n');
-
-        // Perform action based on the input
-        if (input == "start") {
-            start_flag = true;
-            randomSeed(analogRead(3));
-            delay(200); // Pause 200 milliseconds
-            goForward(); // Go forward
-        } else if (input == "stop") {
-            // Stop execution of code
-            start_flag = false;
-            delay(200); // Pause 200 milliseconds
-            stopAll(); // Stop all
-        }
+    if (checkSerialCommand()) {
+        return;
     }
 
-    if (start_flag) {
-        val = digitalRead(inputPin); // read input value
-        if (val == HIGH)
-        {                             // check if the input is HIGH
-            digitalWrite(ledPin, HIGH); // turn LED ON
-            if (pirState == LOW)
-            {
-            // we have just turned on
-            // We only want to print on the output change, not state
-            pirState = HIGH;
-            stopAll();
-            delay(200);
-
-            sweepStart();
-            Serial.println("motion");
-            sweepRunning();
-            sweepEnd();
-            }
-        }
-        else
-        {
-            digitalWrite(ledPin, LOW); // turn LED OFF
-            if (pirState == HIGH)
-            {
-            // we have just turned of
-            // Serial.println("Motion ended!");
-            // We only want to print on the output change, not state
-            pirState = LOW;
-            goForward();
-            }
-        }       
+    if (start_flag && !stop_flag) {
+        manageMotionDetection();
         avoidObstacle();
     }
 }
 
 /*
-* Setup Motor Pins
+* Check Serial Command
 */
-void setupMotorPins()
+boolean checkSerialCommand()
 {
-    // Motor control pins are outputs
-    pinMode(enA, OUTPUT);
-    pinMode(enB, OUTPUT);
-    pinMode(in1, OUTPUT);
-    pinMode(in2, OUTPUT);
-    pinMode(in3, OUTPUT);
-    pinMode(in4, OUTPUT);
+    if (Serial.available() > 0) {
+        String serialInput = Serial.readStringUntil('\n');
+        serialInput.trim();
+        // "stop" command
+        if (serialInput == "stop") {
+            start_flag = false;
+            stop_flag = true;
+            sweepEnd();
+            stopAll();
+            return true;
+        }
+        // "start" command
+        else if (serialInput == "start") {
+            start_flag = true;
+            stop_flag = false;
+            randomSeed(analogRead(3));
+            goForward(); 
+            return true;
+        }
+        // "human" command
+        else if (serialInput == "human") {
+            sweepEnd();
+            buzzerTone();
+            return true;
+        }
+    }
+    return false;
+}
 
-    // Turn off motors - Initial state
+/*
+* Manage Motion Detection
+*/
+void manageMotionDetection() {
+    val = digitalRead(inputPin); // read input value
+    if (val == HIGH && pirState == LOW)
+    {                            
+        digitalWrite(ledPin, HIGH); // turn LED ON
+        pirState = HIGH;
+        performSweep();  
+    }
+    else if (val == LOW && pirState == HIGH)
+    {
+        digitalWrite(ledPin, LOW); // turn LED OFF
+        pirState = LOW;
+        goForward(); 
+    }      
+}
+
+/*
+* Perform Sweep action
+*/
+void performSweep() {
+    stopAll();
+    delay(200);
+    sweepStart();
+    Serial.println("motion");
+    sweepRunning();
+    sweepEnd();
+}
+
+/*
+ *  Forwards, backwards, right, left, stop.
+ */
+void goForward()
+{
+    digitalWrite(in1, HIGH);
+    digitalWrite(in2, LOW);
+    digitalWrite(in3, HIGH);
+    digitalWrite(in4, LOW);
+}
+void goBackwards()
+{
+    digitalWrite(in1, LOW);
+    digitalWrite(in2, HIGH);
+    digitalWrite(in3, LOW);
+    digitalWrite(in4, HIGH);
+}
+void goRight()
+{
+    digitalWrite(in1, HIGH);
+    digitalWrite(in2, LOW);
+    digitalWrite(in3, LOW);
+    digitalWrite(in4, HIGH);
+}
+void goLeft()
+{
+    digitalWrite(in1, LOW);
+    digitalWrite(in2, HIGH);
+    digitalWrite(in3, HIGH);
+    digitalWrite(in4, LOW);
+}
+void stopAll()
+{
     digitalWrite(in1, LOW);
     digitalWrite(in2, LOW);
     digitalWrite(in3, LOW);
     digitalWrite(in4, LOW);
-
-    // Set the motor speed
-    analogWrite(enA, motorSpeed);
-    analogWrite(enB, motorSpeed);
-}
-
-/* 
-* Setup Ultrasonic Pins
-*/
-void setupUltrasonicPins()
-{
-    // Define each pin as an input or output for ultrasonic.
-    pinMode(Echo, INPUT);
-    pinMode(Trigger, OUTPUT);
-}
-
-/*
-* Setup Pir Sensor Pins 
-*/
-void setupPirSensorPins()
-{
-    // Define each pin as an input or output for pir sensor
-    pinMode(ledPin, OUTPUT);  // declare LED as output
-    pinMode(inputPin, INPUT); // declare sensor as input
 }
 
 /*
@@ -214,45 +226,6 @@ int doPing()
 }
 
 /*
- *  Forwards, backwards, right, left, stop.
- */
-void goForward()
-{
-    digitalWrite(in1, HIGH);
-    digitalWrite(in2, LOW);
-    digitalWrite(in3, HIGH);
-    digitalWrite(in4, LOW);
-}
-void goBackwards()
-{
-    digitalWrite(in1, LOW);
-    digitalWrite(in2, HIGH);
-    digitalWrite(in3, LOW);
-    digitalWrite(in4, HIGH);
-}
-void goRight()
-{
-    digitalWrite(in1, HIGH);
-    digitalWrite(in2, LOW);
-    digitalWrite(in3, LOW);
-    digitalWrite(in4, HIGH);
-}
-void goLeft()
-{
-    digitalWrite(in1, LOW);
-    digitalWrite(in2, HIGH);
-    digitalWrite(in3, HIGH);
-    digitalWrite(in4, LOW);
-}
-void stopAll()
-{
-    digitalWrite(in1, LOW);
-    digitalWrite(in2, LOW);
-    digitalWrite(in3, LOW);
-    digitalWrite(in4, LOW);
-}
-
-/*
  * Obstacle detected, avoid it
 */
 void avoidObstacle()
@@ -266,9 +239,10 @@ void avoidObstacle()
         goBackwards(); // Move in reverse
         delay(1000);
 
-        /* Go left or right to avoid the obstacle*/
+        // Go left or right to avoid the obstacle*/
+        // Generates 0 or 1, randomly
         if (random(2) == 0)
-        {               // Generates 0 or 1, randomly
+        {
             goRight(); // Turn right
         }
         else
@@ -277,7 +251,6 @@ void avoidObstacle()
         }
         delay(1500);
         goForward(); // Move forward
-        // Serial.println("Obstacle detected completed");  
     }
     delay(50); // Wait 50 milliseconds before pinging again
 }
@@ -290,13 +263,13 @@ void sweepStart()
     for (posY = posY; posY <= 60; posY += 1)
     {
         servoY.write(posY); // move the vertical servo
-        delay(50);          // delay between movements
+        delay(50);
     }
 
     for (posX = posX; posX >= 0; posX -= 1)
     {
         servoX.write(posX); // move the horizontal servo
-        delay(50);          // delay between movements
+        delay(50);
     }
 }
 
@@ -308,7 +281,7 @@ void sweepRunning()
     for (posX = posX; posX <= 180; posX += 1)
     {
         servoX.write(posX); // move the horizontal servo
-        delay(50);          // delay between movements
+        delay(50);
 
         if (checkSerialCommand()){
             return;
@@ -318,26 +291,12 @@ void sweepRunning()
     for (posX = posX; posX >= 0; posX -= 1)
     {
         servoX.write(posX); // move the horizontal servo
-        delay(50);          // delay between movements
+        delay(50);
 
         if (checkSerialCommand()){
             return;
         }
     }
-}
-
-/*
-* Check Serial Command
-*/
-boolean checkSerialCommand()
-{
-    if (Serial.available() > 0 && Serial.readString() == "human")
-    {   
-        sweepEnd();
-        buzzerTone();
-        return true;
-    }
-    return false;
 }
 
 /*
@@ -349,13 +308,13 @@ void sweepEnd()
     for (posX = posX; posX <= 90; posX += 1)
     {
         servoX.write(posX); // move the horizontal servo
-        delay(50);          // delay between movements
+        delay(50);
     }
 
     for (posY = posY; posY >= 0; posY -= 1)
     {
         servoY.write(posY); // move the vertical servo
-        delay(50);          // delay between movements
+        delay(50);
     }
 }
 
@@ -365,7 +324,63 @@ void sweepEnd()
 void buzzerTone()
 {
     tone(buzzer, 1000); // Send 1KHz sound signal...
-    delay(1000);        // ...for 1 sec
+    delay(1000);
     noTone(buzzer);     // Stop sound...
-    delay(1000);        // ...for 1sec
+    delay(1000);
+}
+
+/*
+* Setup Motor Pins
+*/
+void setupMotorPins()
+{
+    // Motor control pins are outputs
+    pinMode(enA, OUTPUT);
+    pinMode(enB, OUTPUT);
+    pinMode(in1, OUTPUT);
+    pinMode(in2, OUTPUT);
+    pinMode(in3, OUTPUT);
+    pinMode(in4, OUTPUT);
+
+    // Turn off motors - Initial state
+    digitalWrite(in1, LOW);
+    digitalWrite(in2, LOW);
+    digitalWrite(in3, LOW);
+    digitalWrite(in4, LOW);
+
+    // Set the motor speed
+    analogWrite(enA, motorSpeed);
+    analogWrite(enB, motorSpeed);
+}
+
+/* 
+* Setup Ultrasonic Pins
+*/
+void setupUltrasonicPins()
+{
+    // Define each pin as an input or output for ultrasonic.
+    pinMode(Echo, INPUT);
+    pinMode(Trigger, OUTPUT);
+}
+
+/*
+* Setup Pir Sensor Pins 
+*/
+void setupPirSensorPins()
+{
+    // Define each pin as an input or output for pir sensor
+    pinMode(ledPin, OUTPUT);  // declare LED as output
+    pinMode(inputPin, INPUT); // declare sensor as input
+}
+
+/*
+* Setup Servo Pins
+*/
+void setupServoPins()
+{
+    servoX.attach(servoXPin);   
+    servoY.attach(servoYPin);
+
+    servoY.write(posY); 
+    servoX.write(posX);
 }

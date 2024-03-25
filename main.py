@@ -9,7 +9,6 @@ class App:
     start_time = 0
     camera_id = 0
     ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
-    detector = hogDescriptor.HumanDetector(camera_id)
 
     def __init__(self):
         self.getUserInput()
@@ -68,9 +67,10 @@ class App:
                     line = self.ser.readline().decode().rstrip()
                     if line == "motion":
                         # Initialize a HumanDetector object and check if humans are detected
-                        if (self.detector.detect_humans()):
+                        detector = hogDescriptor.HumanDetector(self.camera_id)
+                        if (detector.detect_humans()):
                             # If humans are detected, write 'human' to the serial port and print a message
-                            self.ser.write(b'human')
+                            self.ser.write(b'human\n')
 
         except KeyboardInterrupt:
             print("\nAlarmBuzz has been stopped.")
