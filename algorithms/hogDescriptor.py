@@ -1,7 +1,6 @@
 import cv2
 import imutils
 import time
-from utils import Utils
 
 class HumanDetector:
     def __init__(self, camera_id):
@@ -13,7 +12,7 @@ class HumanDetector:
         self.cap = cv2.VideoCapture(camera_id, cv2.CAP_V4L2)
 
         # Set the duration of the human detection loop in seconds
-        self.duration = 20
+        self.duration = 30
         
     def detect_humans(self):
         # Get the current time in seconds
@@ -38,23 +37,18 @@ class HumanDetector:
                                                           padding=(4, 4),
                                                           scale=1.05)
 
-                # If humans are detected, take a photo and send a notification to Discord
+                # Draw bounding boxes around the detected humans
                 for (x, y, w, h) in regions:
                     cv2.rectangle(image, (x, y),
                                   (x + w, y + h), 
                                   (0, 0, 255), 2)
 
-                    utils = Utils()
-                    utils.saveImage(image)     
-                    utils.sendDiscordNotification()
-
-                    print("AlarmBuzz has detected a human presence! Please check your surroundings.\n")
-
                     # Release the video capture device and close the image window
                     self.cap.release()
                     cv2.destroyAllWindows()
 
-                    return True
+                    # Return True if humans are detected and the image with bounding boxes
+                    return True, image
 
                 # Display the image with bounding boxes around detected humans
                 cv2.imshow("Image", image)
@@ -69,7 +63,7 @@ class HumanDetector:
         self.cap.release()
         cv2.destroyAllWindows()
 
-        return False
+        return False, None
 
 if __name__ == "__main__":
     # Create a HumanDetector object with the default camera ID (0)

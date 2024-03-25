@@ -1,7 +1,8 @@
 import serial
 import time
 
-import hogDescriptor
+from algorithms.haarcascade import HumanDetector
+from utils import Utils
 
 class App:
     username = ""
@@ -31,8 +32,8 @@ class App:
                 self.duration = int(input("How long do you want the alarm buzz to run for? (in seconds) "))
                 if self.duration <= 0:
                     print("Sorry, AlarmBuzz duration must be greater than 0.\n")
-                elif 0 < self.duration < 30:
-                    print("Sorry, AlarmBuzz requires at least 30 seconds to operate.\n")
+                elif 0 < self.duration < 60:
+                    print("Sorry, AlarmBuzz requires at least 60 seconds to operate.\n")
                 else:
                     break
             except ValueError:
@@ -67,10 +68,17 @@ class App:
                     line = self.ser.readline().decode().rstrip()
                     if line == "motion":
                         # Initialize a HumanDetector object and check if humans are detected
-                        detector = hogDescriptor.HumanDetector(self.camera_id)
-                        if (detector.detect_humans()):
-                            # If humans are detected, write 'human' to the serial port and print a message
+                        detector = HumanDetector(self.camera_id)
+                        detection, image = detector.detect_humans()
+                        if (detection):
+                            # Save the image and send a Discord notification
+                            utils = Utils()
+                            utils.saveImage(image)     
+                            utils.sendDiscordNotification()
+
+                            # Write 'human' to the serial port and print a message
                             self.ser.write(b'human\n')
+                            print("AlarmBuzz has detected a human presence! Please check your surroundings.\n")
 
         except KeyboardInterrupt:
             print("\nAlarmBuzz has been stopped.")
