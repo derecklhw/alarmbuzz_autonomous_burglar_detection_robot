@@ -281,7 +281,7 @@ void sweepRunning()
     for (posX = posX; posX <= 180; posX += 1)
     {
         servoX.write(posX); // move the horizontal servo
-        delay(50);
+        delay(75);
 
         if (checkSerialCommand()){
             return;
@@ -291,7 +291,7 @@ void sweepRunning()
     for (posX = posX; posX >= 0; posX -= 1)
     {
         servoX.write(posX); // move the horizontal servo
-        delay(50);
+        delay(75);
 
         if (checkSerialCommand()){
             return;
@@ -303,14 +303,26 @@ void sweepRunning()
  * Sweep End Movement
 */
 void sweepEnd()
-{
-    // stop the servos and wait for 1 second before starting the next loop
-    for (posX = posX; posX <= 90; posX += 1)
+{   
+    // Ensure posX returns to 90 degrees
+    if (posX > 90)
     {
-        servoX.write(posX); // move the horizontal servo
-        delay(50);
+        for (; posX >= 90; posX -= 1)
+        {
+            servoX.write(posX); // move the horizontal servo
+            delay(50);
+        }
+    }
+    else if (posX < 90)
+    {
+        for (; posX <= 90; posX += 1)
+        {
+            servoX.write(posX); // move the horizontal servo
+            delay(50);
+        }
     }
 
+    // Then move posY back to 0
     for (posY = posY; posY >= 0; posY -= 1)
     {
         servoY.write(posY); // move the vertical servo
