@@ -34,34 +34,38 @@ class Haarcascade(HumanDetector):
                 frame_resized = imutils.resize(frame, width=self.width, height = self.height)
                 
                 gray = cv2.cvtColor(frame_resized, cv2.COLOR_BGR2GRAY)
-                # Detect faces in the frame using the Haar cascade classifier
-                faces = self.faceCascade.detectMultiScale(gray,
-                                                            scaleFactor=1.1,
-                                                            minNeighbors=5,
-                                                            minSize=(60, 60),
-                                                            flags=cv2.CASCADE_SCALE_IMAGE)
-                
-                # Draw bounding boxes around the detected humans
-                for (x,y,w,h) in faces:
-                    cv2.rectangle(frame_resized, (x, y), (x + w, y + h),(0,255,0), 2)
-                    faceROI = frame_resized[y:y+h,x:x+w]
-                    eyes = self.eyeCascade.detectMultiScale(faceROI)
 
-                    # Draw bounding boxes around the detected eyes
-                    for (x2, y2, w2, h2) in eyes:
-                        eye_center = (x + x2 + w2 // 2, y + y2 + h2 // 2)
-                        radius = int(round((w2 + h2) * 0.25))
-                        frame_resized = cv2.circle(frame_resized, eye_center, radius, (255, 0, 0), 4)
-                        self.isHumanDetected = True
+                if ret:
+                    # Detect faces in the frame using the Haar cascade classifier
+                    faces = self.faceCascade.detectMultiScale(gray,
+                                                                scaleFactor=1.1,
+                                                                minNeighbors=5,
+                                                                minSize=(60, 60),
+                                                                flags=cv2.CASCADE_SCALE_IMAGE)
+                    
+                    # Draw bounding boxes around the detected humans
+                    for (x,y,w,h) in faces:
+                        cv2.rectangle(frame_resized, (x, y), (x + w, y + h),(0,255,0), 2)
+                        faceROI = frame_resized[y:y+h,x:x+w]
+                        eyes = self.eyeCascade.detectMultiScale(faceROI)
 
-                # Display the resulting frame
-                cv2.imshow('Video', frame_resized)
-                self.video.write(frame_resized)
+                        # Draw bounding boxes around the detected eyes
+                        for (x2, y2, w2, h2) in eyes:
+                            eye_center = (x + x2 + w2 // 2, y + y2 + h2 // 2)
+                            radius = int(round((w2 + h2) * 0.25))
+                            frame_resized = cv2.circle(frame_resized, eye_center, radius, (255, 0, 0), 4)
+                            self.isHumanDetected = True
 
-                print(f"Human detected {self.isHumanDetected}")
-                print(f"Owner detected {self.isOwnerDetected}")
-                
-                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    # Display the resulting frame
+                    cv2.imshow('Video', frame_resized)
+                    self.video.write(frame_resized)
+
+                    print(f"Human detected {self.isHumanDetected}")
+                    print(f"Owner detected {self.isOwnerDetected}")
+                    
+                    if cv2.waitKey(1) & 0xFF == ord('q'):
+                        break
+                else:
                     break
     
         finally:
@@ -69,9 +73,9 @@ class Haarcascade(HumanDetector):
             self.cap.release()
             self.video.release()
             cv2.destroyAllWindows()
-            if self.isHumanDetected:
-                return True, None
-            else: return False, None
+            if self.isHumanDetected and not self.isOwnerDetected:
+                return True, False
+            else: return False, False
 
 if __name__ == "__main__":
     detector = Haarcascade(0)

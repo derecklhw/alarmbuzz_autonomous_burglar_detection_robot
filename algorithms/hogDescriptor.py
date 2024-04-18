@@ -11,60 +11,58 @@ class HogDescriptor(HumanDetector):
         # Initialize the HOG descriptor with the default people detector
         self.hog = cv2.HOGDescriptor()
         self.hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
+        self.isHumanDetected = False
+        self.isOwnerDetected = False
         
     def detect_humans(self):
         # Get the current time in seconds
         start_time = time.time()
 
-        # Loop until the duration of the human detection loop has elapsed
-        while (time.time() - start_time) < self.duration:
-            # Read a frame from the video capture device
-            ret, src = self.cap.read()
+        try:
+            # Loop until the duration of the human detection loop has elapsed
+            while (time.time() - start_time) < self.duration:
+                # Read a frame from the video capture device
+                ret, src = self.cap.read()
 
-            # Flip the frame vertically to correct the orientation
-            frame = cv2.flip(src, 0)
+                # Flip the frame vertically to correct the orientation
+                frame = cv2.flip(src, 0)
 
-            # Resize the frame to a smaller size to speed up the detection
-            frame_resized = imutils.resize(frame, 
-                                    width=min(400, 
-                                    frame.shape[1]))
+                # Resize the frame to a smaller size to speed up the detection
+                frame_resized = imutils.resize(frame, width=self.width, height=self.height)
 
-            gray = cv2.cvtColor(frame_resized, cv2.COLOR_BGR2GRAY)
+                gray = cv2.cvtColor(frame_resized, cv2.COLOR_BGR2GRAY)
 
-            if ret:
-                # Detect humans in the frame using the HOG descriptor
-                (regions, _) = self.hog.detectMultiScale(gray,
-                                                          winStride=(4, 4),
-                                                          padding=(4, 4),
-                                                          scale=1.05)
+                if ret:
+                    # Detect humans in the frame using the HOG descriptor
+                    (regions, _) = self.hog.detectMultiScale(gray,
+                                                            winStride=(4, 4),
+                                                            padding=(4, 4),
+                                                            scale=1.05)
 
-                # Draw bounding boxes around the detected humans
-                for (x, y, w, h) in regions:
-                    cv2.rectangle(frame_resized, (x, y),
-                                  (x + w, y + h), 
-                                  (0, 0, 255), 2)
+                    # Draw bounding boxes around the detected humans
+                    for (x, y, w, h) in regions:
+                        cv2.rectangle(frame_resized, (x, y),
+                                    (x + w, y + h), 
+                                    (0, 0, 255), 2)
+                        self.isHumanDetected = True
 
-                    # Release the video capture device and close the image window
-                    self.cap.release()
-                    cv2.destroyAllWindows()
+                    # Display the image with bounding boxes around detected humans
+                    cv2.imshow("Video", frame_resized)
+                    self.video.write(frame_resized)
 
-                    # Return True if humans are detected and the image with bounding boxes
-                    return True, frame_resized
-
-                # Display the image with bounding boxes around detected humans
-                cv2.imshow("Video", frame_resized)
-
-                # Wait for a key press and exit the loop if the 'q' key is pressed
-                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    # Wait for a key press and exit the loop if the 'q' key is pressed
+                    if cv2.waitKey(1) & 0xFF == ord('q'):
+                        break
+                else:
                     break
-            else:
-                break
-
-        # Release the video capture device and close the image window when done
-        self.cap.release()
-        cv2.destroyAllWindows()
-
-        return False, None
+        finally:
+            # Release the video capture device and close the image window when done
+            self.cap.release()
+            self.video.release()
+            cv2.destroyAllWindows()
+            if self.isHumanDetected and not self.isOwnerDetected:
+                return True, False
+            else: return False, False
 
 if __name__ == "__main__":
     # Create a HumanDetector object with the default camera ID (0)
