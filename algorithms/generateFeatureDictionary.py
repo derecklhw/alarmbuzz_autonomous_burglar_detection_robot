@@ -5,17 +5,28 @@ import cv2
 
 
 def main():
-    # Parse the arguments
-    parser = argparse.ArgumentParser("generate aligned face images from an image")
-    parser.add_argument("image", help="input image file path (./image.jpg)")
-    args = parser.parse_args()
+    while True:
+        # Ask the user for the image file path
+        path = input("Please enter the path to the image file (e.g., ./image.jpg): ")
+        directory = os.path.dirname(path)
+        if not directory:
+            directory = os.path.dirname(__file__)
+        path = os.path.join(directory, path)
 
-    # Retrieve the image file path from the arguments
-    path = args.image
-    directory = os.path.dirname(args.image)
-    if not directory:
-        directory = os.path.dirname(__file__)
-        path = os.path.join(directory, args.image)
+        # Check if the image exists
+        if not os.path.exists(path):
+            print(f"No file found at {path}.\n")
+            retry = input("Would you like to retry or cancel? (retry/cancel): ").lower()
+            if retry == "cancel" or retry == "c":
+                print("Operation canceled by the user.")
+                return
+            elif retry == "retry" or retry == "r":
+                continue
+            else:
+                print("Invalid input, please enter 'retry' or 'cancel'.")
+                continue
+        else:
+            break
 
     # Clean up directory before processing
     for filename in os.listdir(directory):

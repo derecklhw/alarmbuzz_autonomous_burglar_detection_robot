@@ -2,6 +2,7 @@ import serial
 import time
 
 from algorithms.yunet import Yunet
+from algorithms.generateFeatureDictionary import main as generateFeatureDictionary
 from utils import Utils
 
 
@@ -23,6 +24,8 @@ class App:
 
         # Get the user's name
         self.username = input("What's your name? ")
+
+        self.updateOwnerList()
 
         # Greet the user
         print(f"\nHi {self.username}! Let's set up AlarmBuzz duration.\n")
@@ -51,6 +54,19 @@ class App:
         # Confirm the alarm time and duration
         print(f"\nAlarmBuzz will run for {self.duration} seconds. Stay safe!\n")
 
+    def updateOwnerList(self):
+        while True:
+            update = input("Would you like to update the owner list? (y/n) ").lower()
+            if update == 'yes' or update == 'y' or update == '':
+                generateFeatureDictionary()
+                print("Owner list updated successfully.")
+                break
+            elif update == 'no' or update == 'n':
+                print("No updates made to the owner list.")
+                break
+            else:
+                print("Invalid input. No updates made to the owner list.")
+                
     def startSerialConnection(self):
         # Open a serial connection and write the 'start' command to the microcontroller
         self.ser.flush()
