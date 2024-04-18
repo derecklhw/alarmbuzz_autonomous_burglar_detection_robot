@@ -1,79 +1,126 @@
 import os
+import glob
 import numpy as np
 import cv2
+import imutils
+import time
 
+from algorithms.humanDetector import HumanDetector
 
-def main():
-    # キャプチャを開く
-    directory = os.path.dirname(__file__)
-    # capture = cv2.VideoCapture(os.path.join(directory, "image.jpg")) # 画像ファイル
-    capture = cv2.VideoCapture(0, cv2.CAP_V4L2)  # カメラ
-    if not capture.isOpened():
-        exit()
+class Yunet(HumanDetector):
+    def __init__(self, camera_id):
+        HumanDetector.__init__(self, camera_id)
 
-    # モデルを読み込む
-    weights = os.path.join(directory, "face_detection_yunet_2023mar.onnx")
-    face_detector = cv2.FaceDetectorYN_create(weights, "", (0, 0))
+        # Initialize the Yunet model for face detection
+        weights = os.path.join(os.path.dirname(__file__), "face_detection_yunet_2023mar.onnx")
+        self.face_detector = cv2.FaceDetectorYN_create(weights, "", (0, 0))
 
-    while True:
-        # フレームをキャプチャして画像を読み込む
-        result, src = capture.read()
-        if result is False:
-            cv2.waitKey(0)
-            break
+        # Initialize the SFace model for face recognition
+        weights = os.path.join(os.path.dirname(__file__), "face_recognition_sface_2021dec.onnx")
+        self.face_recognizer = cv2.FaceRecognizerSF_create(weights, "")
+        self.COSINE_THRESHOLD = 0.363
+        self.NORML2_THRESHOLD = 1.128
 
-        image = cv2.flip(src, 0)
+        self.dictionary = []
+        self.load_features()
 
-        # 画像が3チャンネル以外の場合は3チャンネルに変換する
-        channels = 1 if len(image.shape) == 2 else image.shape[2]
-        if channels == 1:
-            image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
-        if channels == 4:
-            image = cv2.cvtColor(image, cv2.COLOR_BGRA2BGR)
+        self.isHumanDetected = False
+        self.isOwnerDetected = False
 
-        # 入力サイズを指定する
-        height, width, _ = image.shape
-        face_detector.setInputSize((width, height))
+    def load_features(self):
+        # Load the features from the files
+        files = glob.glob(os.path.join(os.path.dirname(__file__), "*.npy"))
+        for file in files:
+            feature = np.load(file)
+            user_id = os.path.splitext(os.path.basename(file))[0]
+            self.dictionary.append((user_id, feature))
 
-        # 顔を検出する
-        _, faces = face_detector.detect(image)
-        faces = faces if faces is not None else []
+    def match(self, feature1):
+        for element in self.dictionary:
+            user_id, feature2 = element
+            score = self.face_recognizer.match(feature1, feature2, cv2.FaceRecognizerSF_FR_COSINE)
+            if score > self.COSINE_THRESHOLD:
+                return True, (user_id, score)
+            return False, ("", 0.0)
+    
+    def detect_humans(self):
+        # Get the current time in seconds
+        start_time = time.time()
+        try:
+            while (time.time() - start_time) < self.duration:
+                # Capture frame-by-frame
+                ret, src = self.cap.read()
+                
+                # Flip the frame vertically to correct the orientation
+                frame = cv2.flip(src, 0)
 
-        # 検出した顔のバウンディングボックスとランドマークを描画する
-        for face in faces:
-            # バウンディングボックス
-            box = list(map(int, face[:4]))
-            color = (0, 0, 255)
-            thickness = 2
-            cv2.rectangle(image, box, color, thickness, cv2.LINE_AA)
+                # Resize the frame to a smaller size to speed up the detection
+                frame_resized = imutils.resize(frame, width=self.width, height = self.height)
 
-            # ランドマーク（右目、左目、鼻、右口角、左口角）
-            # landmarks = list(map(int, face[4 : len(face) - 1]))
-            # landmarks = np.array_split(landmarks, len(landmarks) / 2)
-            # for landmark in landmarks:
-            #     radius = 5
-            #     thickness = -1
-            #     cv2.circle(image, landmark, radius, color, thickness, cv2.LINE_AA)
+                # If the image is not in 3 channels, convert it to 3 channels.
+                channels = 1 if len(frame_resized.shape) == 2 else frame_resized.shape[2]
+                if channels == 1:
+                    frame_resized = cv2.cvtColor(frame_resized, cv2.COLOR_GRAY2BGR)
+                if channels == 4:
+                    frame_resized = cv2.cvtColor(frame_resized, cv2.COLOR_BGRA2BGR)
 
-            # 信頼度
-            confidence = face[-1]
-            confidence = "{:.2f}".format(confidence)
-            position = (box[0], box[1] - 10)
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            scale = 0.5
-            thickness = 2
-            cv2.putText(
-                image, confidence, position, font, scale, color, thickness, cv2.LINE_AA
-            )
+                # Specify the input size.
+                height, width, _ = frame_resized.shape
+                self.face_detector.setInputSize((width, height))
 
-        # 画像を表示する
-        cv2.imshow("face detection", image)
-        key = cv2.waitKey(10)
-        if key == ord("q"):
-            break
+                if ret:
+                    # Detect faces.
+                    result, faces = self.face_detector.detect(frame_resized)
+                    faces = faces if faces is not None else []
 
-    cv2.destroyAllWindows()
+                    for face in faces:
+                        self.isHumanDetected = True
+                        # Crop the face and extract features.
+                        aligned_face = self.face_recognizer.alignCrop(frame_resized, face)
+                        feature = self.face_recognizer.feature(aligned_face)
 
+                        # Match with the dictionary.
+                        result, user = self.match(feature)
+
+                        # Draw the bounding box around the face.
+                        box = list(map(int, face[:4]))
+                        color = (0, 255, 0) if result else (0, 0, 255)
+                        thickness = 2
+                        cv2.rectangle(frame_resized, box, color, thickness, cv2.LINE_AA)
+
+                        # Draw the recognition result.
+                        id, score = user if result else ("unknown", 0.0)
+                        text = "{0} ({1:.2f})".format(id, score)
+                        position = (box[0], box[1] - 10)
+                        font = cv2.FONT_HERSHEY_SIMPLEX
+                        scale = 0.6
+                        cv2.putText(
+                            frame_resized, text, position, font, scale, color, thickness, cv2.LINE_AA
+                        )
+
+                        if (result):
+                            self.isOwnerDetected = True
+                            break
+                    
+                    if (self.isOwnerDetected):
+                        break
+                    
+                    # Display the image.
+                    cv2.imshow("Video", frame_resized)
+                    self.video.write(frame_resized)
+
+                    if cv2.waitKey(1) & 0xFF == ord('q'):
+                            break
+                else:
+                    break
+
+        finally:
+            self.cap.release()
+            self.video.release()
+            cv2.destroyAllWindows()
+
+            return self.isHumanDetected, self.isOwnerDetected
 
 if __name__ == "__main__":
-    main()
+    detector = Yunet(0)
+    detector.detect_humans()

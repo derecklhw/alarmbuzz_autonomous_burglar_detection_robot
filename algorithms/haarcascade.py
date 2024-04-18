@@ -73,9 +73,8 @@ class Haarcascade(HumanDetector):
             self.cap.release()
             self.video.release()
             cv2.destroyAllWindows()
-            if self.isHumanDetected and not self.isOwnerDetected:
-                return True, False
-            else: return False, False
+
+            return self.isHumanDetected, self.isOwnerDetected
 
 if __name__ == "__main__":
     detector = Haarcascade(0)

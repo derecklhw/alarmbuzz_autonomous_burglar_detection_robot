@@ -1,7 +1,7 @@
 import serial
 import time
 
-from algorithms.haarcascade import Haarcascade
+from algorithms.yunet import Yunet
 from utils import Utils
 
 
@@ -14,6 +14,7 @@ class App:
         self.ser = serial.Serial("/dev/ttyUSB0", 9600, timeout=1)
         self.getUserInput()
         self.startSerialConnection()
+        self.utils = Utils()
 
     def getUserInput(self):
         print("╔══════════════════════════════════════╗")
@@ -76,20 +77,29 @@ class App:
                     # Read a line from the serial port
                     line = self.ser.readline().decode().rstrip()
                     if line == "motion":
+                        print("Motion detected! Watch out for any suspicious activities.\n")
+                        self.utils.sendDiscordNotification("motion")
+                        
                         # Initialize a HumanDetector object and check if humans are detected
-                        detector = Haarcascade(self.camera_id)
-                        detection, image = detector.detect_humans()
-                        if detection:
-                            # Save the image and send a Discord notification
-                            utils = Utils()
-                            utils.saveImage(image)
-                            utils.sendDiscordNotification()
+                        detector = Yunet(self.camera_id)
+                        isHuman, isOwner = detector.detect_humans()
+                        
+                        if isHuman and not isOwner:
+                            # utils.saveImage(image)
+                            self.utils.sendDiscordNotification("intruder")
+                            print("Intruder detected! Initiating alert protocol.\n")
+                            # Write 'intruder' to the serial port and print a message
+                            self.ser.write(b"intruder\n")
 
-                            # Write 'human' to the serial port and print a message
-                            self.ser.write(b"human\n")
-                            print(
-                                "AlarmBuzz has detected a human presence! Please check your surroundings.\n"
-                            )
+                        elif isHuman and isOwner:
+                            self.utils.sendDiscordNotification("owner")
+                            print("Owner identified. Disabling security alerts.\n")
+                            # Write 'intruder' to the serial port and print a message
+                            self.ser.write(b"owner\n")
+
+                        else:
+                            self.utils.sendDiscordNotification("false_alarm")
+                            print("False alarm! No intruders detected.\n")
 
         except KeyboardInterrupt:
             print("\nAlarmBuzz has been stopped.")

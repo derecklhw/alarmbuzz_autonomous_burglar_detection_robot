@@ -98,10 +98,16 @@ boolean checkSerialCommand()
             return true;
         }
         // "human" command
-        else if (serialInput == "human")
+        else if (serialInput == "intruder")
         {
             sweepEnd();
             buzzerTone();
+            return true;
+        }
+        // "owner" command
+        else if (serialInput == "owner")
+        {
+            sweepEnd();
             return true;
         }
     }
