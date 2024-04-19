@@ -26,25 +26,24 @@ class Utils:
         
         match action:
             case "motion":
-                data =  f"Alert! Motion detected at {dt_string}.\nPlease avoid any sudden movements and await further instructions."
+                data =  f"Alert: Motion detected at {dt_string}."
                 
-                self.hook.send(data)
             case "intruder":
-                data = f"Warning! Intruder detected at {dt_string}.\nAn alert has been issued. Please remain calm and secure your immediate surroundings."
-                human_detection_image = File("/home/derecklhw/Documents/alarmbuzz_autonomous_burglar_detection_robot/output.avi")
-
-                self.hook.send(data, file=human_detection_image)
+                data = f"Warning: Intruder detected at {dt_string}."
+             
             case "owner":
-                data = f"Notification: Owner recognized at {dt_string}.\nWelcome back! Please proceed with normal activities."
+                data = f"Notification: Owner recognized at {dt_string}."
                 
-                self.hook.send(data)
             case "false_alarm":
-                data = f"Notification: False alarm detected at {dt_string}.\nPlease be cautious and report any suspicious activities."
+                data = f"Notification: No intruder detected at {dt_string}."
                 
-                self.hook.send(data)
             case _:
-                data = f"Notice: An unidentified event was detected at {dt_string}.\nPlease check your surroundings and report any unusual activities."
-                
-                self.hook.send(data)
+                data = f"Notice: An unidentified event was detected at {dt_string}."
+
+        if action != "motion":
+            human_detection_image = File("./output.avi")
+            self.hook.send(data, file=human_detection_image)
+        else:
+            self.hook.send(data)
       
 
