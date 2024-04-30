@@ -26,6 +26,7 @@ class Yunet(HumanDetector):
 
         self.isHumanDetected = False
         self.isOwnerDetected = False
+        self.intruderImage = None
 
     def load_features(self):
         # Load the features from the files
@@ -97,10 +98,10 @@ class Yunet(HumanDetector):
                         cv2.putText(
                             frame_resized, text, position, font, scale, color, thickness, cv2.LINE_AA
                         )
-
                         if (result):
                             self.isOwnerDetected = True
                             break
+                        self.intruderImage = frame_resized
                     
                     if (self.isOwnerDetected):
                         break
@@ -119,7 +120,8 @@ class Yunet(HumanDetector):
             self.video.release()
             cv2.destroyAllWindows()
 
-            return self.isHumanDetected, self.isOwnerDetected
+            if self.isOwnerDetected is True: return self.isHumanDetected, self.isOwnerDetected, frame_resized
+            return self.isHumanDetected, self.isOwnerDetected, self.intruderImage
 
 if __name__ == "__main__":
     detector = Yunet(0)

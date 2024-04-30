@@ -98,10 +98,12 @@ class App:
                         
                         # Initialize a HumanDetector object and check if humans are detected
                         detector = Yunet(self.camera_id)
-                        isHuman, isOwner = detector.detect_humans()
+                        isHuman, isOwner, image = detector.detect_humans()
+
+                        if image is not None:
+                            self.utils.saveImage(image)
                         
                         if isHuman and not isOwner:
-                            # utils.saveImage(image)
                             self.utils.sendDiscordNotification("intruder")
                             print("Intruder detected! Initiating alert protocol.\n")
                             # Write 'intruder' to the serial port and print a message
@@ -115,7 +117,7 @@ class App:
 
                         else:
                             self.utils.sendDiscordNotification("false_alarm")
-                            print("False alarm! No intruders detected.\n")
+                            print("No intruders detected. Please review the video footage for verification.\n")
 
         except KeyboardInterrupt:
             print("\nAlarmBuzz has been stopped.")
