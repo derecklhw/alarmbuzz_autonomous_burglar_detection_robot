@@ -1,5 +1,6 @@
 import serial
 import time
+import os
 
 from algorithms.yunet import Yunet
 from algorithms.generateFeatureDictionary import main as generateFeatureDictionary
@@ -23,9 +24,19 @@ class App:
         print("╚══════════════════════════════════════╝")
 
         # Get the user's name
-        self.username = input("What's your name? ")
+        self.username = input("What's your name?")
 
         self.updateOwnerList()
+        while True:
+            # Check for the specific file presence after updating the owner list
+            file_check = "face001.jpg"  # Define the file to check
+            directory = os.getcwd() + "/algorithms/"  # Get the current working directory
+            
+            if file_check in os.listdir(directory):
+                break
+            else:
+                print("\nPlease re-update the owner list as it is invalid.")
+                self.updateOwnerList()
 
         # Greet the user
         print(f"\nHi {self.username}! Let's set up AlarmBuzz duration.\n")
@@ -56,7 +67,7 @@ class App:
 
     def updateOwnerList(self):
         while True:
-            update = input("Would you like to update the owner list? (y/n) ").lower()
+            update = input("\nWould you like to update the owner list? (y/n) ").lower()
             if update == 'yes' or update == 'y' or update == '':
                 generateFeatureDictionary()
                 print("Owner list updated successfully.")

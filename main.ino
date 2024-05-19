@@ -7,7 +7,7 @@ const int servoXPin = 3; // attach the horizontal servo to pin 3
 const int servoYPin = 2; // attach the vertical servo to pin 2
 
 int posX = 90; // initial position of the horizontal servo
-int posY = 0;  // initial position of the vertical servo
+int posY = 60; // initial position of the vertical servo
 
 // Motor A connections
 const int enA = 9;
@@ -301,7 +301,7 @@ void sweepEnd()
     }
 
     // Then move posY back to 0
-    for (posY = posY; posY >= 0; posY -= 1)
+    for (posY = posY; posY >= 60; posY -= 1)
     {
         servoY.write(posY); // move the vertical servo
         delay(50);
